@@ -36,8 +36,8 @@ import GRDB
 let dbQueue = try DatabaseQueue(path: "/path/to/database.sqlite")
 
 let redWinesCount = dbQueue.inDatabase { db in            // Int
-    db.fetchOne(Int.self, "SELECT COUNT(*) FROM wines WHERE color = ?",
-                arguments: [Color.Red])!
+    Int.fetchOne(db, "SELECT COUNT(*) FROM wines WHERE color = ?",
+                 arguments: [Color.Red])!
 }
 
 try dbQueue.inTransaction { db in
@@ -46,8 +46,8 @@ try dbQueue.inTransaction { db in
 }
 
 dbQueue.inDatabase { db in
-    let persons = db.fetchAll(Person.self, "SELECT ...")  // [Person]
-    for wine in db.fetch(Wine.self, "SELECT ...") {       // AnySequence<Wine>
+    let persons = Person.fetchAll(db, "SELECT ...")  // [Person]
+    for wine in Wind.fetch(db, "SELECT ...") {       // AnySequence<Wine>
         ...
     }
 }
@@ -202,9 +202,9 @@ Fetch **lazy sequences** of rows, **arrays**, or a **single** row:
 
 ```swift
 dbQueue.inDatabase { db in
-    db.fetchRows("SELECT ...", arguments: ...)     // AnySequence<Row>
-    db.fetchAllRows("SELECT ...", arguments: ...)  // [Row]
-    db.fetchOneRow("SELECT ...", arguments: ...)   // Row?
+    Row.fetch(db, "SELECT ...", arguments: ...)     // AnySequence<Row>
+    Row.fetchAll(db, "SELECT ...", arguments: ...)  // [Row]
+    Row.fetchOne(db, "SELECT ...", arguments: ...)   // Row?
 }
 ```
 
@@ -212,15 +212,15 @@ Arguments are optional arrays or dictionaries that fill the positional `?` and n
 
 
 ```swift
-db.fetchRows("SELECT * FROM persons WHERE name = ?", arguments: ["Arthur"])
-db.fetchRows("SELECT * FROM persons WHERE name = :name", arguments: ["name": "Arthur"])
+Row.fetch(db, "SELECT * FROM persons WHERE name = ?", arguments: ["Arthur"])
+Row.fetch(db, "SELECT * FROM persons WHERE name = :name", arguments: ["name": "Arthur"])
 ```
 
 Lazy sequences can not be consumed outside of a database queue, but arrays are OK:
 
 ```swift
 let rows = dbQueue.inDatabase { db in
-    return db.fetchAllRows("SELECT ...")          // [Row]
+    return Row.fetchAll(db, "SELECT ...")          // [Row]
     return fetchRows("SELECT ...").filter { ... } // [Row]
 }
 for row in rows { ... } // OK
@@ -282,9 +282,9 @@ Like rows, values can be fetched as **lazy sequences**, **arrays**, or **single*
 
 ```swift
 dbQueue.inDatabase { db in
-    db.fetch(Int.self, "SELECT ...", arguments: ...)      // AnySequence<Int?>
-    db.fetchAll(Int.self, "SELECT ...", arguments: ...)   // [Int?]
-    db.fetchOne(Int.self, "SELECT ...", arguments: ...)   // Int?
+    Int.fetch(db, "SELECT ...", arguments: ...)      // AnySequence<Int?>
+    Int.fetchAll(db, "SELECT ...", arguments: ...)   // [Int?]
+    Int.fetchOne(db, "SELECT ...", arguments: ...)   // Int?
 }
 ```
 
@@ -292,8 +292,8 @@ Lazy sequences can not be consumed outside of a database queue, but arrays are O
 
 ```swift
 let names = dbQueue.inDatabase { db in
-    return db.fetchAll(String.self, "SELECT name ...")             // [String?]
-    return db.fetch(String.self, "SELECT name ...").filter { ... } // [String?]
+    return String.fetchAll(db, "SELECT name ...")             // [String?]
+    return String.fetch(db, "SELECT name ...").filter { ... } // [String?]
 }
 for name in names { ... } // OK
 ```
@@ -303,7 +303,7 @@ Sequences and arrays contain optional values. When you are sure that all results
 ```swift
 // names is [String]
 let names = dbQueue.inDatabase { db in
-    db.fetchAll(String.self, "SELECT name FROM persons").map { $0! }
+    String.fetchAll(db, "SELECT name FROM persons").map { $0! }
 }
 ```
 
@@ -395,18 +395,20 @@ try db.execute("INSERT INTO persons (birthDate, ...) " +
 Extract NSDate from the database:
 
 ```swift
-let row = db.fetchOneRow("SELECT birthDate, ...")!
+let row = Row.fetchOne(db, "SELECT birthDate, ...")!
 let date = (row.value(named: "birthDate") as DatabaseDate?)?.date    // NSDate?
 
-db.fetch(DatabaseDate.self, "SELECT ...")       // AnySequence<DatabaseDate?>
-db.fetchAll(DatabaseDate.self, "SELECT ...")    // [DatabaseDate?]
-db.fetchOne(DatabaseDate.self, "SELECT ...")    // DatabaseDate?
+DatabaseDate.fetch(db, "SELECT ...")       // AnySequence<DatabaseDate?>
+DatabaseDate.fetchAll(db, "SELECT ...")    // [DatabaseDate?]
+DatabaseDate.fetchOne(db, "SELECT ...")    // DatabaseDate?
 ```
 
 Use NSDate in a [Row Model](#row-models):
 
 ```swift
-class Person : RowModel {
+class Person : RowModel, RowFetchable {
+    typealias FetchedType = Person
+    
     var birthDate: NSDate?
 
     override var storedDatabaseDictionary: [String: DatabaseValueConvertible?] {
@@ -448,20 +450,22 @@ try db.execute("INSERT INTO persons (birthDate, ...) " +
 Extract NSDateComponents from the database:
 
 ```swift
-let row = db.fetchOneRow("SELECT birthDate, ...")!
+let row = Row.fetchOne(db, "SELECT birthDate, ...")!
 let dbComponents = row.value(named: "birthDate")! as DatabaseDateComponents
 dbComponents.format         // .Iso8601Date (the actual format found in the database)
 dbComponents.dateComponents // NSDateComponents
 
-db.fetch(DatabaseDateComponents.self, "SELECT ...")    // AnySequence<DatabaseDateComponents?>
-db.fetchAll(DatabaseDateComponents.self, "SELECT ...") // [DatabaseDateComponents?]
-db.fetchOne(DatabaseDateComponents.self, "SELECT ...") // DatabaseDateComponents?
+DatabaseDateComponents.fetch(db, "SELECT ...")    // AnySequence<DatabaseDateComponents?>
+DatabaseDateComponents.fetchAll(db, "SELECT ...") // [DatabaseDateComponents?]
+DatabaseDateComponents.fetchOne(db, "SELECT ...") // DatabaseDateComponents?
 ```
 
 Use NSDateComponents in a [Row Model](#row-models):
 
 ```swift
-class Person : RowModel {
+class Person : RowModel, RowFetchable {
+    typealias FetchedType = Person
+
     var birthDateComponents: NSDateComponents?
 
     override var storedDatabaseDictionary: [String: DatabaseValueConvertible?] {
@@ -520,15 +524,15 @@ try db.execute("INSERT INTO wines (grape, color) VALUES (?, ?)",
                arguments: [Grape.Merlot, Color.Red])
 
 // Extract from row:
-for rows in db.fetchRows("SELECT * FROM wines") {
+for rows in Row.fetch(db, "SELECT * FROM wines") {
     let grape: Grape? = row.value(named: "grape")
     let color: Color? = row.value(named: "color")
 }
 
 // Direct fetch:
-db.fetch(Color.self, "SELECT ...", arguments: ...)    // AnySequence<Color?>
-db.fetchAll(Color.self, "SELECT ...", arguments: ...) // [Color?]
-db.fetchOne(Color.self, "SELECT ...", arguments: ...) // Color?
+Color.fetch(db, "SELECT ...", arguments: ...)    // AnySequence<Color?>
+Color.fetchAll(db, "SELECT ...", arguments: ...) // [Color?]
+Color.fetchOne(db, "SELECT ...", arguments: ...) // Color?
 ```
 
 
@@ -603,14 +607,14 @@ try db.execute("INSERT INTO persons (date, ...) " +
                          arguments: [DatabaseTimestamp(date), ...])
 
 // Extract NSDate from row:
-for rows in db.fetchRows("SELECT ...") {
+for rows in Row.fetch(db, "SELECT ...") {
     let date = (row.value(named: "date") as DatabaseTimestamp?)?.date
 }
 
 // Direct fetch:
-db.fetch(DatabaseTimestamp.self, "SELECT ...")    // AnySequence<DatabaseTimestamp?>
-db.fetchAll(DatabaseTimestamp.self, "SELECT ...") // [DatabaseTimestamp?]
-db.fetchOne(DatabaseTimestamp.self, "SELECT ...") // DatabaseTimestamp?
+DatabaseTimestamp.fetch(db, "SELECT ...")    // AnySequence<DatabaseTimestamp?>
+DatabaseTimestamp.fetchAll(db, "SELECT ...") // [DatabaseTimestamp?]
+DatabaseTimestamp.fetchOne(db, "SELECT ...") // DatabaseTimestamp?
 ```
 
 ### Value Extraction in Details
@@ -697,7 +701,7 @@ dbQueue.inDatabase { db in
 ```swift
 // fatal error:
 // SQLite error 1 with statement `SELECT foo FROM bar`: no such table: bar
-db.fetchAllRows("SELECT foo FROM bar")
+Row.fetchAll(db, "SELECT foo FROM bar")
 
 do {
     try db.execute(
@@ -800,7 +804,9 @@ class Person : RowModel {
 The `setDatabaseValue(_:forColumn:)` method assigns database values to properties:
 
 ```swift
-class Person : RowModel {
+class Person : RowModel, RowFetchable {
+    typealias FetchedType = Person
+
     override func setDatabaseValue(dbv: DatabaseValue, forColumn column: String) {
         switch column {
         case "id":   id = dbv.value()    // Extract Int64!
@@ -820,12 +826,12 @@ Now you can fetch **lazy sequences** of row models, **arrays**, or **single** in
 
 dbQueue.inDatabase { db in
     // With custom SQL:
-    db.fetch(Person.self, "SELECT ...", arguments:...)    // AnySequence<Person>
-    db.fetchAll(Person.self, "SELECT ...", arguments:...) // [Person]
-    db.fetchOne(Person.self, "SELECT ...", arguments:...) // Person?
+    Person.fetch(db, "SELECT ...", arguments:...)    // AnySequence<Person>
+    Person.fetchAll(db, "SELECT ...", arguments:...) // [Person]
+    Person.fetchOne(db, "SELECT ...", arguments:...) // Person?
     
     // With a key dictionary:
-    db.fetchOne(Person.self, key: ["id": 123])            // Person?
+    Person.fetchOne(db, key: ["id": 123])            // Person?
 }
 ```
 
@@ -835,8 +841,8 @@ Lazy sequences can not be consumed outside of a database queue, but arrays are O
 
 ```swift
 let persons = dbQueue.inDatabase { db in
-    return db.fetchAll(Person.self, "SELECT ...")             // [Person]
-    return db.fetch(Person.self, "SELECT ...").filter { ... } // [Person]
+    return Person.fetchAll(db, "SELECT ...")             // [Person]
+    return Person.fetch(db, "SELECT ...").filter { ... } // [Person]
 }
 for person in persons { ... } // OK
 ```
@@ -869,7 +875,7 @@ class PersonsViewController: UITableViewController {
         super.viewWillAppear(animated)
         
         persons = dbQueue.inDatabase { db in
-            db.fetchAll(PersonViewModel.self,
+            PersonViewModel.fetchAll(db,
                 "SELECT persons.*, COUNT(*) AS bookCount " +
                 "FROM persons " +
                 "JOIN books ON books.ownerID = persons.id " +
@@ -897,7 +903,7 @@ class Person : RowModel {
 
 try dbQueue.inDatabase { db in
     // Fetch
-    let person = db.fetchOne(Person.self, primaryKey: 123)  // Person?
+    let person = Person.fetchOne(db, primaryKey: 123)  // Person?
 }
 ```
 
@@ -960,7 +966,7 @@ Avoid it with the `edited` property, which returns whether the row model has cha
 let json = ...
 try dbQueue.inTransaction { db in
     // Fetches or create a new person given its ID:
-    let person = db.fetchOne(Person.self, primaryKey: json["id"]) ?? Person()
+    let person = Person.fetchOne(db, primaryKey: json["id"]) ?? Person()
     
     // Apply json payload:
     person.updateFromJSON(json)
@@ -1008,7 +1014,9 @@ CREATE TABLE persons {
 ```
 
 ```swift
-class Person : RowModel {
+class Person : RowModel, RowFetchable {
+    typealias FetchedType = Person
+
     id: Int64!
     
     /// The table definition.

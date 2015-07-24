@@ -26,7 +26,9 @@ import XCTest
 import GRDB
 
 // Pet has a non-RowID primary key.
-class Pet: RowModel {
+class Pet : RowModel, RowFetchable {
+    typealias FetchedType = Pet
+    
     var UUID: String!
     var name: String!
     
@@ -93,7 +95,7 @@ class PrimaryKeySingleTests: RowModelTestCase {
                 let rowModel = Pet(UUID: "BobbyUUID", name: "Bobby")
                 try rowModel.insert(db)
                 
-                let row = db.fetchOneRow("SELECT * FROM pets WHERE UUID = ?", arguments: [rowModel.UUID])!
+                let row = Row.fetchOne(db, "SELECT * FROM pets WHERE UUID = ?", arguments: [rowModel.UUID])!
                 for (key, value) in rowModel.storedDatabaseDictionary {
                     if let dbv = row[key] {
                         XCTAssertEqual(dbv, value?.databaseValue ?? .Null)
@@ -128,7 +130,7 @@ class PrimaryKeySingleTests: RowModelTestCase {
                 try rowModel.delete(db)
                 try rowModel.insert(db)
                 
-                let row = db.fetchOneRow("SELECT * FROM pets WHERE UUID = ?", arguments: [rowModel.UUID])!
+                let row = Row.fetchOne(db, "SELECT * FROM pets WHERE UUID = ?", arguments: [rowModel.UUID])!
                 for (key, value) in rowModel.storedDatabaseDictionary {
                     if let dbv = row[key] {
                         XCTAssertEqual(dbv, value?.databaseValue ?? .Null)
@@ -180,7 +182,7 @@ class PrimaryKeySingleTests: RowModelTestCase {
                 rowModel.name = "Carl"
                 try rowModel.update(db)
                 
-                let row = db.fetchOneRow("SELECT * FROM pets WHERE UUID = ?", arguments: [rowModel.UUID])!
+                let row = Row.fetchOne(db, "SELECT * FROM pets WHERE UUID = ?", arguments: [rowModel.UUID])!
                 for (key, value) in rowModel.storedDatabaseDictionary {
                     if let dbv = row[key] {
                         XCTAssertEqual(dbv, value?.databaseValue ?? .Null)
@@ -232,7 +234,7 @@ class PrimaryKeySingleTests: RowModelTestCase {
                 let rowModel = Pet(UUID: "BobbyUUID", name: "Bobby")
                 try rowModel.save(db)
                 
-                let row = db.fetchOneRow("SELECT * FROM pets WHERE UUID = ?", arguments: [rowModel.UUID])!
+                let row = Row.fetchOne(db, "SELECT * FROM pets WHERE UUID = ?", arguments: [rowModel.UUID])!
                 for (key, value) in rowModel.storedDatabaseDictionary {
                     if let dbv = row[key] {
                         XCTAssertEqual(dbv, value?.databaseValue ?? .Null)
@@ -253,7 +255,7 @@ class PrimaryKeySingleTests: RowModelTestCase {
                 rowModel.name = "Carl"
                 try rowModel.save(db)   // Actual update
                 
-                let row = db.fetchOneRow("SELECT * FROM pets WHERE UUID = ?", arguments: [rowModel.UUID])!
+                let row = Row.fetchOne(db, "SELECT * FROM pets WHERE UUID = ?", arguments: [rowModel.UUID])!
                 for (key, value) in rowModel.storedDatabaseDictionary {
                     if let dbv = row[key] {
                         XCTAssertEqual(dbv, value?.databaseValue ?? .Null)
@@ -273,7 +275,7 @@ class PrimaryKeySingleTests: RowModelTestCase {
                 try rowModel.delete(db)
                 try rowModel.save(db)
                 
-                let row = db.fetchOneRow("SELECT * FROM pets WHERE UUID = ?", arguments: [rowModel.UUID])!
+                let row = Row.fetchOne(db, "SELECT * FROM pets WHERE UUID = ?", arguments: [rowModel.UUID])!
                 for (key, value) in rowModel.storedDatabaseDictionary {
                     if let dbv = row[key] {
                         XCTAssertEqual(dbv, value?.databaseValue ?? .Null)
@@ -319,7 +321,7 @@ class PrimaryKeySingleTests: RowModelTestCase {
                 try rowModel.insert(db)
                 try rowModel.delete(db)
                 
-                let row = db.fetchOneRow("SELECT * FROM pets WHERE UUID = ?", arguments: [rowModel.UUID])
+                let row = Row.fetchOne(db, "SELECT * FROM pets WHERE UUID = ?", arguments: [rowModel.UUID])
                 XCTAssertTrue(row == nil)
             }
         }
@@ -376,7 +378,7 @@ class PrimaryKeySingleTests: RowModelTestCase {
                 rowModel.name = "Carl"
                 try rowModel.reload(db)
                 
-                let row = db.fetchOneRow("SELECT * FROM pets WHERE UUID = ?", arguments: [rowModel.UUID])!
+                let row = Row.fetchOne(db, "SELECT * FROM pets WHERE UUID = ?", arguments: [rowModel.UUID])!
                 for (key, value) in rowModel.storedDatabaseDictionary {
                     if let dbv = row[key] {
                         XCTAssertEqual(dbv, value?.databaseValue ?? .Null)
@@ -413,7 +415,7 @@ class PrimaryKeySingleTests: RowModelTestCase {
                 let rowModel = Pet(UUID: "BobbyUUID", name: "Bobby")
                 try rowModel.insert(db)
                 
-                let fetchedRowModel = db.fetchOne(Pet.self, primaryKey: rowModel.UUID)!
+                let fetchedRowModel = Pet.fetchOne(db, primaryKey: rowModel.UUID)!
                 XCTAssertTrue(fetchedRowModel.UUID == rowModel.UUID)
                 XCTAssertTrue(fetchedRowModel.name == rowModel.name)
             }
@@ -426,7 +428,7 @@ class PrimaryKeySingleTests: RowModelTestCase {
                 let rowModel = Pet(UUID: "BobbyUUID", name: "Bobby")
                 try rowModel.insert(db)
                 
-                let fetchedRowModel = db.fetchOne(Pet.self, key: ["name": rowModel.name])!
+                let fetchedRowModel = Pet.fetchOne(db, key: ["name": rowModel.name])!
                 XCTAssertTrue(fetchedRowModel.UUID == rowModel.UUID)
                 XCTAssertTrue(fetchedRowModel.name == rowModel.name)
             }

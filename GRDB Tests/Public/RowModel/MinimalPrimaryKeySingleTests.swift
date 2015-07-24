@@ -27,7 +27,9 @@ import GRDB
 
 // MinimalRowID is the most tiny class with a Single row primary key which
 // supports read and write operations of RowModel.
-class MinimalSingle: RowModel {
+class MinimalSingle: RowModel, RowFetchable {
+    typealias FetchedType = MinimalSingle
+    
     var UUID: String!
     
     override class var databaseTable: Table? {
@@ -78,7 +80,7 @@ class MinimalPrimaryKeySingleTests: RowModelTestCase {
                 rowModel.UUID = "theUUID"
                 try rowModel.insert(db)
                 
-                let row = db.fetchOneRow("SELECT * FROM minimalSingles WHERE UUID = ?", arguments: [rowModel.UUID])!
+                let row = Row.fetchOne(db, "SELECT * FROM minimalSingles WHERE UUID = ?", arguments: [rowModel.UUID])!
                 for (key, value) in rowModel.storedDatabaseDictionary {
                     if let dbv = row[key] {
                         XCTAssertEqual(dbv, value?.databaseValue ?? .Null)
@@ -115,7 +117,7 @@ class MinimalPrimaryKeySingleTests: RowModelTestCase {
                 try rowModel.delete(db)
                 try rowModel.insert(db)
                 
-                let row = db.fetchOneRow("SELECT * FROM minimalSingles WHERE UUID = ?", arguments: [rowModel.UUID])!
+                let row = Row.fetchOne(db, "SELECT * FROM minimalSingles WHERE UUID = ?", arguments: [rowModel.UUID])!
                 for (key, value) in rowModel.storedDatabaseDictionary {
                     if let dbv = row[key] {
                         XCTAssertEqual(dbv, value?.databaseValue ?? .Null)
@@ -168,7 +170,7 @@ class MinimalPrimaryKeySingleTests: RowModelTestCase {
                 try rowModel.insert(db)
                 try rowModel.update(db)
                 
-                let row = db.fetchOneRow("SELECT * FROM minimalSingles WHERE UUID = ?", arguments: [rowModel.UUID])!
+                let row = Row.fetchOne(db, "SELECT * FROM minimalSingles WHERE UUID = ?", arguments: [rowModel.UUID])!
                 for (key, value) in rowModel.storedDatabaseDictionary {
                     if let dbv = row[key] {
                         XCTAssertEqual(dbv, value?.databaseValue ?? .Null)
@@ -222,7 +224,7 @@ class MinimalPrimaryKeySingleTests: RowModelTestCase {
                 rowModel.UUID = "theUUID"
                 try rowModel.save(db)
                 
-                let row = db.fetchOneRow("SELECT * FROM minimalSingles WHERE UUID = ?", arguments: [rowModel.UUID])!
+                let row = Row.fetchOne(db, "SELECT * FROM minimalSingles WHERE UUID = ?", arguments: [rowModel.UUID])!
                 for (key, value) in rowModel.storedDatabaseDictionary {
                     if let dbv = row[key] {
                         XCTAssertEqual(dbv, value?.databaseValue ?? .Null)
@@ -242,7 +244,7 @@ class MinimalPrimaryKeySingleTests: RowModelTestCase {
                 try rowModel.insert(db)
                 try rowModel.save(db)
                 
-                let row = db.fetchOneRow("SELECT * FROM minimalSingles WHERE UUID = ?", arguments: [rowModel.UUID])!
+                let row = Row.fetchOne(db, "SELECT * FROM minimalSingles WHERE UUID = ?", arguments: [rowModel.UUID])!
                 for (key, value) in rowModel.storedDatabaseDictionary {
                     if let dbv = row[key] {
                         XCTAssertEqual(dbv, value?.databaseValue ?? .Null)
@@ -263,7 +265,7 @@ class MinimalPrimaryKeySingleTests: RowModelTestCase {
                 try rowModel.delete(db)
                 try rowModel.save(db)
                 
-                let row = db.fetchOneRow("SELECT * FROM minimalSingles WHERE UUID = ?", arguments: [rowModel.UUID])!
+                let row = Row.fetchOne(db, "SELECT * FROM minimalSingles WHERE UUID = ?", arguments: [rowModel.UUID])!
                 for (key, value) in rowModel.storedDatabaseDictionary {
                     if let dbv = row[key] {
                         XCTAssertEqual(dbv, value?.databaseValue ?? .Null)
@@ -311,7 +313,7 @@ class MinimalPrimaryKeySingleTests: RowModelTestCase {
                 try rowModel.insert(db)
                 try rowModel.delete(db)
                 
-                let row = db.fetchOneRow("SELECT * FROM minimalSingles WHERE UUID = ?", arguments: [rowModel.UUID])
+                let row = Row.fetchOne(db, "SELECT * FROM minimalSingles WHERE UUID = ?", arguments: [rowModel.UUID])
                 XCTAssertTrue(row == nil)
             }
         }
@@ -370,7 +372,7 @@ class MinimalPrimaryKeySingleTests: RowModelTestCase {
                 try rowModel.insert(db)
                 try rowModel.reload(db)
                 
-                let row = db.fetchOneRow("SELECT * FROM minimalSingles WHERE UUID = ?", arguments: [rowModel.UUID])!
+                let row = Row.fetchOne(db, "SELECT * FROM minimalSingles WHERE UUID = ?", arguments: [rowModel.UUID])!
                 for (key, value) in rowModel.storedDatabaseDictionary {
                     if let dbv = row[key] {
                         XCTAssertEqual(dbv, value?.databaseValue ?? .Null)
@@ -409,7 +411,7 @@ class MinimalPrimaryKeySingleTests: RowModelTestCase {
                 rowModel.UUID = "theUUID"
                 try rowModel.insert(db)
                 
-                let fetchedRowModel = db.fetchOne(MinimalSingle.self, primaryKey: rowModel.UUID)!
+                let fetchedRowModel = MinimalSingle.fetchOne(db, primaryKey: rowModel.UUID)!
                 XCTAssertTrue(fetchedRowModel.UUID == rowModel.UUID)
             }
         }
@@ -422,7 +424,7 @@ class MinimalPrimaryKeySingleTests: RowModelTestCase {
                 rowModel.UUID = "theUUID"
                 try rowModel.insert(db)
                 
-                let fetchedRowModel = db.fetchOne(MinimalSingle.self, key: ["UUID": rowModel.UUID])!
+                let fetchedRowModel = MinimalSingle.fetchOne(db, key: ["UUID": rowModel.UUID])!
                 XCTAssertTrue(fetchedRowModel.UUID == rowModel.UUID)
             }
         }

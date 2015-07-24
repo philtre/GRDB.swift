@@ -40,16 +40,18 @@ Usage:
                              arguments: [DatabaseDate(date), ...])
 
     // Extract NSDate from the database:
-    let row in db.fetchOneRow("SELECT ...")!
+    let row in Row.fetchOne(db, "SELECT ...")!
     let date = (row.value(named: "date") as DatabaseDate?)?.date
 
     // Direct fetch:
-    db.fetch(DatabaseDate.self, "SELECT ...", arguments: ...)    // AnySequence<DatabaseDate?>
-    db.fetchAll(DatabaseDate.self, "SELECT ...", arguments: ...) // [DatabaseDate?]
-    db.fetchOne(DatabaseDate.self, "SELECT ...", arguments: ...) // DatabaseDate?
+    DatabaseDate.fetch(db, "SELECT ...", arguments: ...)    // AnySequence<DatabaseDate?>
+    DatabaseDate.fetchAll(db, "SELECT ...", arguments: ...) // [DatabaseDate?]
+    DatabaseDate.fetchOne(db, "SELECT ...", arguments: ...) // DatabaseDate?
     
     // Use NSDate in a RowModel:
-    class Person : RowModel {
+    class Person : RowModel, RowFetchable {
+        typealias FetchedType = Person
+
         var birthDate: NSDate?
 
         override var storedDatabaseDictionary: [String: DatabaseValueConvertible?] {
@@ -65,7 +67,8 @@ Usage:
     }
 
 */
-public struct DatabaseDate : DatabaseValueConvertible {
+public struct DatabaseDate : DatabaseValueConvertible, FetchableValue {
+    public typealias FetchedType = DatabaseDate
     
     // MARK: - NSDate conversion
     //
@@ -190,7 +193,8 @@ public struct DatabaseDate : DatabaseValueConvertible {
 /**
 DatabaseDateComponents reads and stores NSDateComponents in the database.
 */
-public struct DatabaseDateComponents : DatabaseValueConvertible {
+public struct DatabaseDateComponents : DatabaseValueConvertible, FetchableValue {
+    public typealias FetchedType = DatabaseDateComponents
     
     /// The available formats for reading and storing date components.
     public enum Format : String {

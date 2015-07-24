@@ -25,7 +25,9 @@
 import Foundation
 import GRDB
 
-class Person : RowModel {
+class Person : RowModel, RowFetchable {
+    typealias FetchedType = Person
+    
     var id: Int64!
     var firstName: String?
     var lastName: String?

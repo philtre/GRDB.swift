@@ -176,7 +176,7 @@ public class RowModel {
         let json = ...
     
         // Fetches or create a new person given its ID:
-        let person = db.fetchOne(Person.self, primaryKey: json["id"]) ?? Person()
+        let person = Person.fetchOne(db, primaryKey: json["id"]) ?? Person()
     
         // Apply json payload:
         person.updateFromJSON(json)
@@ -674,132 +674,6 @@ extension RowModelError : CustomStringConvertible {
 
 
 // MARK: - Fetching Row Models
-
-/**
-The Database methods that fetch RowModels.
-*/
-extension Database {
-    
-    /**
-    Fetches a lazy sequence of RowModels.
-
-        let persons = db.fetch(Person.self, "SELECT * FROM persons")
-
-    - parameter type:     The type of fetched row models. It must be a subclass
-                          of RowModel.
-    - parameter sql:      An SQL query.
-    - parameter arguments: Optional query arguments.
-    
-    - returns: A lazy sequence of row models.
-    */
-    public func fetch<RowModel: GRDB.RowModel>(type: RowModel.Type, _ sql: String, arguments: QueryArguments? = nil) -> AnySequence<RowModel> {
-        return selectStatement(sql).fetch(type, arguments: arguments)
-    }
-
-    /**
-    Fetches an array sequence of RowModels.
-
-        let persons = db.fetchAll(Person.self, "SELECT * FROM persons")
-
-    - parameter type:     The type of fetched row models. It must be a subclass
-                          of RowModel.
-    - parameter sql:      An SQL query.
-    - parameter arguments: Optional query arguments.
-    
-    - returns: An array of row models.
-    */
-    public func fetchAll<RowModel: GRDB.RowModel>(type: RowModel.Type, _ sql: String, arguments: QueryArguments? = nil) -> [RowModel] {
-        return Array(fetch(type, sql, arguments: arguments))
-    }
-
-    /**
-    Fetches a single RowModel.
-
-        let person = db.fetchOne(Person.self, "SELECT * FROM persons")
-
-    - parameter type:     The type of fetched row model. It must be a subclass
-                          of RowModel.
-    - parameter sql:      An SQL query.
-    - parameter arguments: Optional query arguments.
-    
-    - returns: An optional row model.
-    */
-    public func fetchOne<RowModel: GRDB.RowModel>(type: RowModel.Type, _ sql: String, arguments: QueryArguments? = nil) -> RowModel? {
-        if let first = fetch(type, sql, arguments: arguments).generate().next() {
-            // one row containing an optional value
-            return first
-        } else {
-            // no row
-            return nil
-        }
-    }
-
-    /**
-    Fetches a single RowModel by primary key.
-
-        let person = db.fetchOne(Person.self, primaryKey: 123)
-
-    - parameter type:       The type of fetched row model. It must be a subclass
-                            of RowModel.
-    - parameter primaryKey: A value.
-    - returns: An optional row model.
-    */
-    public func fetchOne<RowModel: GRDB.RowModel>(type: RowModel.Type, primaryKey: DatabaseValueConvertible?) -> RowModel? {
-        guard let primaryKey = primaryKey else {
-            return nil
-        }
-        
-        // Select methods crash when there is an issue
-        guard let table = type.databaseTable else {
-            fatalError("Nil Table returned from \(type).databaseTable")
-        }
-        
-        guard let tablePrimaryKey = table.primaryKey else {
-            fatalError("Nil Primary Key in \(type).databaseTable")
-        }
-        
-        let sql: String
-        switch tablePrimaryKey {
-        case .RowID(let column):
-            sql = "SELECT * FROM \(table.name.quotedDatabaseIdentifier) WHERE \(column.quotedDatabaseIdentifier) = ?"
-        case .Column(let column):
-            sql = "SELECT * FROM \(table.name.quotedDatabaseIdentifier) WHERE \(column.quotedDatabaseIdentifier) = ?"
-        case .Columns(let columns):
-            guard columns.count == 1 else {
-                fatalError("Primary key columns count mismatch in \(type).databaseTable")
-            }
-            sql = "SELECT * FROM \(table.name.quotedDatabaseIdentifier) WHERE \(columns.first!.quotedDatabaseIdentifier) = ?"
-        }
-        
-        return selectStatement(sql).fetchOne(type, arguments: [primaryKey])
-    }
-    
-    /**
-    Fetches a single RowModel given a key.
-
-        let person = db.fetchOne(Person.self, key: ["name": Arthur"])
-
-    - parameter type: The type of fetched row model. It must be a subclass of
-                      RowModel.
-    - parameter key:  A dictionary of values.
-    - returns: An optional row model.
-    */
-    public func fetchOne<RowModel: GRDB.RowModel>(type: RowModel.Type, key dictionary: [String: DatabaseValueConvertible?]?) -> RowModel? {
-        guard let dictionary = dictionary else {
-            return nil
-        }
-        
-        // Select methods crash when there is an issue
-        guard let table = type.databaseTable else {
-            fatalError("Nil Table returned from \(type).databaseTable")
-        }
-        
-        let whereSQL = " AND ".join(dictionary.keys.map { column in "\(column.quotedDatabaseIdentifier)=?" })
-        let sql = "SELECT * FROM \(table.name.quotedDatabaseIdentifier) WHERE \(whereSQL)"
-        return selectStatement(sql).fetchOne(type, arguments: QueryArguments(dictionary.values))
-    }
-}
-
 
 /**
 The SelectStatement methods that fetch RowModels.

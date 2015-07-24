@@ -88,7 +88,9 @@ class RowModelWithImmutableProperty : RowModel {
 }
 
 // What happens with an immutable property and init()?
-class RowModelWithPedigree : RowModel {
+class RowModelWithPedigree : RowModel, RowFetchable {
+    typealias FetchedType = RowModelWithPedigree
+    
     let initializedFromRow: Bool
     
     override init() {
@@ -131,7 +133,7 @@ class RowModelInitializersTests : RowModelTestCase {
                 try db.execute("CREATE TABLE pedigrees (foo INTEGER)")
                 try db.execute("INSERT INTO pedigrees (foo) VALUES (NULL)")
                 
-                let pedigree = db.fetchOne(RowModelWithPedigree.self, "SELECT * FROM pedigrees")!
+                let pedigree = RowModelWithPedigree.fetchOne(db, "SELECT * FROM pedigrees")!
                 XCTAssertTrue(pedigree.initializedFromRow)  // very important
             }
         }

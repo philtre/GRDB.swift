@@ -24,7 +24,9 @@
 import XCTest
 import GRDB
 
-class Email : RowModel {
+class Email : RowModel, RowFetchable {
+    typealias FetchedType = Email
+    
     var email: String!
     var label: String?
     
@@ -90,7 +92,7 @@ class PrimaryKeySingleWithReplaceConflictResolutionTests: RowModelTestCase {
                 rowModel.label = "Home"
                 try rowModel.insert(db)
                 
-                let row = db.fetchOneRow("SELECT * FROM emails WHERE email = ?", arguments: [rowModel.email])!
+                let row = Row.fetchOne(db, "SELECT * FROM emails WHERE email = ?", arguments: [rowModel.email])!
                 for (key, value) in rowModel.storedDatabaseDictionary {
                     if let dbv = row[key] {
                         XCTAssertEqual(dbv, value?.databaseValue ?? .Null)
@@ -112,7 +114,7 @@ class PrimaryKeySingleWithReplaceConflictResolutionTests: RowModelTestCase {
                 rowModel.label = "Work"
                 try rowModel.insert(db)
                 
-                let row = db.fetchOneRow("SELECT * FROM emails WHERE email = ?", arguments: [rowModel.email])!
+                let row = Row.fetchOne(db, "SELECT * FROM emails WHERE email = ?", arguments: [rowModel.email])!
                 for (key, value) in rowModel.storedDatabaseDictionary {
                     if let dbv = row[key] {
                         XCTAssertEqual(dbv, value?.databaseValue ?? .Null)
@@ -133,7 +135,7 @@ class PrimaryKeySingleWithReplaceConflictResolutionTests: RowModelTestCase {
                 try rowModel.delete(db)
                 try rowModel.insert(db)
                 
-                let row = db.fetchOneRow("SELECT * FROM emails WHERE email = ?", arguments: [rowModel.email])!
+                let row = Row.fetchOne(db, "SELECT * FROM emails WHERE email = ?", arguments: [rowModel.email])!
                 for (key, value) in rowModel.storedDatabaseDictionary {
                     if let dbv = row[key] {
                         XCTAssertEqual(dbv, value?.databaseValue ?? .Null)
@@ -186,7 +188,7 @@ class PrimaryKeySingleWithReplaceConflictResolutionTests: RowModelTestCase {
                 try rowModel.insert(db)
                 try rowModel.update(db)
                 
-                let row = db.fetchOneRow("SELECT * FROM emails WHERE email = ?", arguments: [rowModel.email])!
+                let row = Row.fetchOne(db, "SELECT * FROM emails WHERE email = ?", arguments: [rowModel.email])!
                 for (key, value) in rowModel.storedDatabaseDictionary {
                     if let dbv = row[key] {
                         XCTAssertEqual(dbv, value?.databaseValue ?? .Null)
@@ -240,7 +242,7 @@ class PrimaryKeySingleWithReplaceConflictResolutionTests: RowModelTestCase {
                 rowModel.email = "me@domain.com"
                 try rowModel.save(db)
                 
-                let row = db.fetchOneRow("SELECT * FROM emails WHERE email = ?", arguments: [rowModel.email])!
+                let row = Row.fetchOne(db, "SELECT * FROM emails WHERE email = ?", arguments: [rowModel.email])!
                 for (key, value) in rowModel.storedDatabaseDictionary {
                     if let dbv = row[key] {
                         XCTAssertEqual(dbv, value?.databaseValue ?? .Null)
@@ -260,7 +262,7 @@ class PrimaryKeySingleWithReplaceConflictResolutionTests: RowModelTestCase {
                 try rowModel.insert(db)
                 try rowModel.save(db)
                 
-                let row = db.fetchOneRow("SELECT * FROM emails WHERE email = ?", arguments: [rowModel.email])!
+                let row = Row.fetchOne(db, "SELECT * FROM emails WHERE email = ?", arguments: [rowModel.email])!
                 for (key, value) in rowModel.storedDatabaseDictionary {
                     if let dbv = row[key] {
                         XCTAssertEqual(dbv, value?.databaseValue ?? .Null)
@@ -281,7 +283,7 @@ class PrimaryKeySingleWithReplaceConflictResolutionTests: RowModelTestCase {
                 try rowModel.delete(db)
                 try rowModel.save(db)
                 
-                let row = db.fetchOneRow("SELECT * FROM emails WHERE email = ?", arguments: [rowModel.email])!
+                let row = Row.fetchOne(db, "SELECT * FROM emails WHERE email = ?", arguments: [rowModel.email])!
                 for (key, value) in rowModel.storedDatabaseDictionary {
                     if let dbv = row[key] {
                         XCTAssertEqual(dbv, value?.databaseValue ?? .Null)
@@ -329,7 +331,7 @@ class PrimaryKeySingleWithReplaceConflictResolutionTests: RowModelTestCase {
                 try rowModel.insert(db)
                 try rowModel.delete(db)
                 
-                let row = db.fetchOneRow("SELECT * FROM emails WHERE email = ?", arguments: [rowModel.email])
+                let row = Row.fetchOne(db, "SELECT * FROM emails WHERE email = ?", arguments: [rowModel.email])
                 XCTAssertTrue(row == nil)
             }
         }
@@ -388,7 +390,7 @@ class PrimaryKeySingleWithReplaceConflictResolutionTests: RowModelTestCase {
                 try rowModel.insert(db)
                 try rowModel.reload(db)
                 
-                let row = db.fetchOneRow("SELECT * FROM emails WHERE email = ?", arguments: [rowModel.email])!
+                let row = Row.fetchOne(db, "SELECT * FROM emails WHERE email = ?", arguments: [rowModel.email])!
                 for (key, value) in rowModel.storedDatabaseDictionary {
                     if let dbv = row[key] {
                         XCTAssertEqual(dbv, value?.databaseValue ?? .Null)
@@ -427,7 +429,7 @@ class PrimaryKeySingleWithReplaceConflictResolutionTests: RowModelTestCase {
                 rowModel.email = "me@domain.com"
                 try rowModel.insert(db)
                 
-                let fetchedRowModel = db.fetchOne(Email.self, primaryKey: rowModel.email)!
+                let fetchedRowModel = Email.fetchOne(db, primaryKey: rowModel.email)!
                 XCTAssertTrue(fetchedRowModel.email == rowModel.email)
             }
         }
@@ -440,7 +442,7 @@ class PrimaryKeySingleWithReplaceConflictResolutionTests: RowModelTestCase {
                 rowModel.email = "me@domain.com"
                 try rowModel.insert(db)
                 
-                let fetchedRowModel = db.fetchOne(Email.self, key: ["email": rowModel.email])!
+                let fetchedRowModel = Email.fetchOne(db, key: ["email": rowModel.email])!
                 XCTAssertTrue(fetchedRowModel.email == rowModel.email)
             }
         }

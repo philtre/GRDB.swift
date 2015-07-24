@@ -26,7 +26,9 @@ import XCTest
 import GRDB
 
 // Item has no primary key.
-class Item: RowModel {
+class Item : RowModel, RowFetchable {
+    typealias FetchedType = Item
+    
     var name: String?
     
     override class var databaseTable: Table? {
@@ -73,7 +75,7 @@ class PrimaryKeyNoneTests: RowModelTestCase {
                 try rowModel.insert(db)
                 try rowModel.insert(db)
                 
-                let names = db.fetchAll(String.self, "SELECT name FROM items").map { $0! }
+                let names = String.fetchAll(db, "SELECT name FROM items").map { $0! }
                 XCTAssertEqual(names, ["Table", "Table"])
             }
         }
@@ -106,7 +108,7 @@ class PrimaryKeyNoneTests: RowModelTestCase {
                 try rowModel.save(db)
                 try rowModel.save(db)
                 
-                let names = db.fetchAll(String.self, "SELECT name FROM items").map { $0! }
+                let names = String.fetchAll(db, "SELECT name FROM items").map { $0! }
                 XCTAssertEqual(names, ["Table", "Table"])
             }
         }
@@ -155,7 +157,7 @@ class PrimaryKeyNoneTests: RowModelTestCase {
                 let rowModel = Item(name: "Table")
                 try rowModel.insert(db)
                 
-                let fetchedRowModel = db.fetchOne(Item.self, key: ["name": rowModel.name])!
+                let fetchedRowModel = Item.fetchOne(db, key: ["name": rowModel.name])!
                 XCTAssertTrue(fetchedRowModel.name == rowModel.name)
             }
         }

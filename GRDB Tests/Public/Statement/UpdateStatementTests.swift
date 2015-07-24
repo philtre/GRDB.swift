@@ -65,7 +65,7 @@ class UpdateStatementTests : GRDBTestCase {
             }
             
             dbQueue.inDatabase { db in
-                let rows = db.fetchAllRows("SELECT * FROM persons ORDER BY name")
+                let rows = Row.fetchAll(db, "SELECT * FROM persons ORDER BY name")
                 XCTAssertEqual(rows.count, 2)
                 XCTAssertEqual(rows[0].value(named: "name")! as String, "Arthur")
                 XCTAssertEqual(rows[0].value(named: "age")! as Int, 41)
@@ -93,7 +93,7 @@ class UpdateStatementTests : GRDBTestCase {
             }
             
             dbQueue.inDatabase { db in
-                let rows = db.fetchAllRows("SELECT * FROM persons ORDER BY name")
+                let rows = Row.fetchAll(db, "SELECT * FROM persons ORDER BY name")
                 XCTAssertEqual(rows.count, 2)
                 XCTAssertEqual(rows[0].value(named: "name")! as String, "Arthur")
                 XCTAssertEqual(rows[0].value(named: "age")! as Int, 41)

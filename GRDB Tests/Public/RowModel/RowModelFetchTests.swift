@@ -51,7 +51,7 @@ class RowModelFetchTests: RowModelTestCase {
                 try Person(name: "Arthur", age: 41).insert(db)
                 try Person(name: "Barbara", age: 37).insert(db)
                 
-                let personSequence = db.fetch(Person.self, "SELECT * FROM persons ORDER BY name")
+                let personSequence = Person.fetch(db, "SELECT * FROM persons ORDER BY name")
                 var names1: [String?] = personSequence.map { $0.name }
                 var names2: [String?] = personSequence.map { $0.name }
                 

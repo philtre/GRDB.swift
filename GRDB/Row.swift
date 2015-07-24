@@ -304,6 +304,48 @@ public struct Row: CollectionType {
     }
 }
 
+extension Row: RowFetchable {
+    
+    /**
+    Fetches a lazy sequence of rows.
+
+        let rows = Row.fetch(db, "SELECT ...")
+
+    - parameter sql: An SQL query.
+    - parameter arguments: Optional query arguments.
+    - returns: A lazy sequence of rows.
+    */
+    public static func fetch(db: Database, _ sql: String, arguments: QueryArguments? = nil) -> AnySequence<Row> {
+        return db.selectStatement(sql).fetchRows(arguments: arguments)
+    }
+    
+    /**
+    Fetches an array of rows.
+    
+        let rows = Row.fetchAll(db, "SELECT ...")
+    
+    - parameter sql: An SQL query.
+    - parameter arguments: Optional query arguments.
+    - returns: An array of rows.
+    */
+    public static func fetchAll(db: Database, _ sql: String, arguments: QueryArguments? = nil) -> [Row] {
+        return Array(Row.fetch(db, sql, arguments: arguments))
+    }
+    
+    /**
+    Fetches a single row.
+    
+        let row = Row.fetchOne(db, "SELECT ...")
+    
+    - parameter sql: An SQL query.
+    - parameter arguments: Optional query arguments.
+    - returns: An optional row.
+    */
+    public static func fetchOne(db: Database, _ sql: String, arguments: QueryArguments? = nil) -> Row? {
+        return Row.fetch(db, sql, arguments: arguments).generate().next()
+    }
+}
+
 // The protocol for Row underlying implementation
 protocol RowImpl {
     var columnCount: Int { get }

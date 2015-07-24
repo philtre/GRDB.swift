@@ -27,7 +27,9 @@ import GRDB
 
 // MinimalRowID is the most tiny class with a RowID primary key which supports
 // read and write operations of RowModel.
-class MinimalRowID: RowModel {
+class MinimalRowID : RowModel, RowFetchable {
+    typealias FetchedType = MinimalRowID
+    
     var id: Int64!
     
     override class var databaseTable: Table? {
@@ -64,7 +66,7 @@ class MinimalPrimaryKeyRowIDTests: RowModelTestCase {
                 try rowModel.insert(db)
                 XCTAssertTrue(rowModel.id != nil)
                 
-                let row = db.fetchOneRow("SELECT * FROM minimalRowIDs WHERE id = ?", arguments: [rowModel.id])!
+                let row = Row.fetchOne(db, "SELECT * FROM minimalRowIDs WHERE id = ?", arguments: [rowModel.id])!
                 for (key, value) in rowModel.storedDatabaseDictionary {
                     if let dbv = row[key] {
                         XCTAssertEqual(dbv, value?.databaseValue ?? .Null)
@@ -83,7 +85,7 @@ class MinimalPrimaryKeyRowIDTests: RowModelTestCase {
                 rowModel.id = 123456
                 try rowModel.insert(db)
                 
-                let row = db.fetchOneRow("SELECT * FROM minimalRowIDs WHERE id = ?", arguments: [rowModel.id])!
+                let row = Row.fetchOne(db, "SELECT * FROM minimalRowIDs WHERE id = ?", arguments: [rowModel.id])!
                 for (key, value) in rowModel.storedDatabaseDictionary {
                     if let dbv = row[key] {
                         XCTAssertEqual(dbv, value?.databaseValue ?? .Null)
@@ -118,7 +120,7 @@ class MinimalPrimaryKeyRowIDTests: RowModelTestCase {
                 try rowModel.delete(db)
                 try rowModel.insert(db)
                 
-                let row = db.fetchOneRow("SELECT * FROM minimalRowIDs WHERE id = ?", arguments: [rowModel.id])!
+                let row = Row.fetchOne(db, "SELECT * FROM minimalRowIDs WHERE id = ?", arguments: [rowModel.id])!
                 for (key, value) in rowModel.storedDatabaseDictionary {
                     if let dbv = row[key] {
                         XCTAssertEqual(dbv, value?.databaseValue ?? .Null)
@@ -170,7 +172,7 @@ class MinimalPrimaryKeyRowIDTests: RowModelTestCase {
                 try rowModel.insert(db)
                 try rowModel.update(db)
                 
-                let row = db.fetchOneRow("SELECT * FROM minimalRowIDs WHERE id = ?", arguments: [rowModel.id])!
+                let row = Row.fetchOne(db, "SELECT * FROM minimalRowIDs WHERE id = ?", arguments: [rowModel.id])!
                 for (key, value) in rowModel.storedDatabaseDictionary {
                     if let dbv = row[key] {
                         XCTAssertEqual(dbv, value?.databaseValue ?? .Null)
@@ -209,7 +211,7 @@ class MinimalPrimaryKeyRowIDTests: RowModelTestCase {
                 try rowModel.save(db)
                 XCTAssertTrue(rowModel.id != nil)
                 
-                let row = db.fetchOneRow("SELECT * FROM minimalRowIDs WHERE id = ?", arguments: [rowModel.id])!
+                let row = Row.fetchOne(db, "SELECT * FROM minimalRowIDs WHERE id = ?", arguments: [rowModel.id])!
                 for (key, value) in rowModel.storedDatabaseDictionary {
                     if let dbv = row[key] {
                         XCTAssertEqual(dbv, value?.databaseValue ?? .Null)
@@ -228,7 +230,7 @@ class MinimalPrimaryKeyRowIDTests: RowModelTestCase {
                 rowModel.id = 123456
                 try rowModel.save(db)
                 
-                let row = db.fetchOneRow("SELECT * FROM minimalRowIDs WHERE id = ?", arguments: [rowModel.id])!
+                let row = Row.fetchOne(db, "SELECT * FROM minimalRowIDs WHERE id = ?", arguments: [rowModel.id])!
                 for (key, value) in rowModel.storedDatabaseDictionary {
                     if let dbv = row[key] {
                         XCTAssertEqual(dbv, value?.databaseValue ?? .Null)
@@ -247,7 +249,7 @@ class MinimalPrimaryKeyRowIDTests: RowModelTestCase {
                 try rowModel.insert(db)
                 try rowModel.save(db)
                 
-                let row = db.fetchOneRow("SELECT * FROM minimalRowIDs WHERE id = ?", arguments: [rowModel.id])!
+                let row = Row.fetchOne(db, "SELECT * FROM minimalRowIDs WHERE id = ?", arguments: [rowModel.id])!
                 for (key, value) in rowModel.storedDatabaseDictionary {
                     if let dbv = row[key] {
                         XCTAssertEqual(dbv, value?.databaseValue ?? .Null)
@@ -267,7 +269,7 @@ class MinimalPrimaryKeyRowIDTests: RowModelTestCase {
                 try rowModel.delete(db)
                 try rowModel.save(db)
                 
-                let row = db.fetchOneRow("SELECT * FROM minimalRowIDs WHERE id = ?", arguments: [rowModel.id])!
+                let row = Row.fetchOne(db, "SELECT * FROM minimalRowIDs WHERE id = ?", arguments: [rowModel.id])!
                 for (key, value) in rowModel.storedDatabaseDictionary {
                     if let dbv = row[key] {
                         XCTAssertEqual(dbv, value?.databaseValue ?? .Null)
@@ -314,7 +316,7 @@ class MinimalPrimaryKeyRowIDTests: RowModelTestCase {
                 try rowModel.insert(db)
                 try rowModel.delete(db)
                 
-                let row = db.fetchOneRow("SELECT * FROM minimalRowIDs WHERE id = ?", arguments: [rowModel.id])
+                let row = Row.fetchOne(db, "SELECT * FROM minimalRowIDs WHERE id = ?", arguments: [rowModel.id])
                 XCTAssertTrue(row == nil)
             }
         }
@@ -371,7 +373,7 @@ class MinimalPrimaryKeyRowIDTests: RowModelTestCase {
                 try rowModel.insert(db)
                 try rowModel.reload(db)
                 
-                let row = db.fetchOneRow("SELECT * FROM minimalRowIDs WHERE id = ?", arguments: [rowModel.id])!
+                let row = Row.fetchOne(db, "SELECT * FROM minimalRowIDs WHERE id = ?", arguments: [rowModel.id])!
                 for (key, value) in rowModel.storedDatabaseDictionary {
                     if let dbv = row[key] {
                         XCTAssertEqual(dbv, value?.databaseValue ?? .Null)
@@ -408,7 +410,7 @@ class MinimalPrimaryKeyRowIDTests: RowModelTestCase {
                 let rowModel = MinimalRowID()
                 try rowModel.insert(db)
                 
-                let fetchedRowModel = db.fetchOne(MinimalRowID.self, primaryKey: rowModel.id)!
+                let fetchedRowModel = MinimalRowID.fetchOne(db, primaryKey: rowModel.id)!
                 XCTAssertTrue(fetchedRowModel.id == rowModel.id)
             }
         }
@@ -420,7 +422,7 @@ class MinimalPrimaryKeyRowIDTests: RowModelTestCase {
                 let rowModel = MinimalRowID()
                 try rowModel.insert(db)
                 
-                let fetchedRowModel = db.fetchOne(MinimalRowID.self, key: ["id": rowModel.id])!
+                let fetchedRowModel = MinimalRowID.fetchOne(db, key: ["id": rowModel.id])!
                 XCTAssertTrue(fetchedRowModel.id == rowModel.id)
             }
         }

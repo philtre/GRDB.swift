@@ -37,8 +37,12 @@ enum Grape : String {
     case Riesling
 }
 
-extension Color : DatabaseIntRepresentable { }
-extension Grape : DatabaseStringRepresentable { }
+extension Color : DatabaseIntRepresentable {
+    typealias FetchedType = Color
+}
+extension Grape : DatabaseStringRepresentable {
+    typealias FetchedType = Grape
+}
 
 class RawRepresentableTests: GRDBTestCase {
     
@@ -66,7 +70,7 @@ class RawRepresentableTests: GRDBTestCase {
                 }
                 
                 do {
-                    let rows = db.fetchAllRows("SELECT color FROM wines ORDER BY color")
+                    let rows = Row.fetchAll(db, "SELECT color FROM wines ORDER BY color")
                     let colors = rows.map { $0.value(atIndex: 0) as Color? }
                     XCTAssertEqual(colors[0]!, Color.Red)
                     XCTAssertEqual(colors[1]!, Color.White)
@@ -75,7 +79,7 @@ class RawRepresentableTests: GRDBTestCase {
                 }
                 
                 do {
-                    let colors = db.fetchAll(Color.self, "SELECT color FROM wines ORDER BY color")
+                    let colors = Color.fetchAll(db, "SELECT color FROM wines ORDER BY color")
                     XCTAssertEqual(colors[0]!, Color.Red)
                     XCTAssertEqual(colors[1]!, Color.White)
                     XCTAssertEqual(colors[2]!, Color.Rose)
@@ -99,7 +103,7 @@ class RawRepresentableTests: GRDBTestCase {
                 }
                 
                 do {
-                    let rows = db.fetchAllRows("SELECT grape FROM wines ORDER BY grape")
+                    let rows = Row.fetchAll(db, "SELECT grape FROM wines ORDER BY grape")
                     let grapes = rows.map { $0.value(atIndex: 0) as Grape? }
                     XCTAssertEqual(grapes[0]!, Grape.Chardonnay)
                     XCTAssertEqual(grapes[1]!, Grape.Merlot)
@@ -108,7 +112,7 @@ class RawRepresentableTests: GRDBTestCase {
                 }
                 
                 do {
-                    let grapes = db.fetchAll(Grape.self, "SELECT grape FROM wines ORDER BY grape")
+                    let grapes = Grape.fetchAll(db, "SELECT grape FROM wines ORDER BY grape")
                     XCTAssertEqual(grapes[0]!, Grape.Chardonnay)
                     XCTAssertEqual(grapes[1]!, Grape.Merlot)
                     XCTAssertEqual(grapes[2]!, Grape.Riesling)

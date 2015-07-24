@@ -65,7 +65,7 @@ public final class SelectStatement : Statement {
     
         // All rows are loaded, which means that statement has been fully
         // consumed, and any SQLite casting opportunity has passed.
-        let rows = db.fetchAllRows("SELECT ...")
+        let rows = Row.fetchAll(db, "SELECT ...")
     
         for row in rows {
             let age: Int = row.value(atIndex:0)     // the conversion actually happens in GRDB.
@@ -124,7 +124,7 @@ extension SelectStatement {
                 // Here we avoid this pattern:
                 //
                 //      let rows = dbQueue.inDatabase { db in
-                //          try db.fetchRows("...")
+                //          try Row.fetch(db, "...")
                 //      }
                 //      for row in rows {   // fatal error!
                 //          ...
@@ -228,7 +228,7 @@ extension SelectStatement {
     Fetches a single value.
 
         let statement = db.selectStatement("SELECT name FROM ...")
-        let name = db.fetchOne(String.self)
+        let name = String.fetchOne(db)
 
     - parameter type:     The type of fetched values. It must adopt
                           DatabaseValueConvertible.

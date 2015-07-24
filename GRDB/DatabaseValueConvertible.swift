@@ -28,6 +28,7 @@ import Foundation
 The protocol for values that can be stored and extracted from SQLite databases.
 */
 public protocol DatabaseValueConvertible {
+    
     /// Returns a value that can be stored in the database.
     var databaseValue: DatabaseValue { get }
     
@@ -39,7 +40,8 @@ public protocol DatabaseValueConvertible {
 // MARK: - Built-in Types
 
 /// Bool is convertible to and from DatabaseValue.
-extension Bool: DatabaseValueConvertible {
+extension Bool : DatabaseValueConvertible, FetchableValue {
+    public typealias FetchedType = Bool
     
     /// Returns a value that can be stored in the database.
     public var databaseValue: DatabaseValue {
@@ -116,7 +118,8 @@ extension Bool: DatabaseValueConvertible {
 }
 
 /// Int is convertible to and from DatabaseValue.
-extension Int: DatabaseValueConvertible {
+extension Int : DatabaseValueConvertible, FetchableValue {
+    public typealias FetchedType = Int
     
     /// Returns a value that can be stored in the database.
     public var databaseValue: DatabaseValue {
@@ -137,7 +140,8 @@ extension Int: DatabaseValueConvertible {
 }
 
 /// Int64 is convertible to and from DatabaseValue.
-extension Int64: DatabaseValueConvertible {
+extension Int64 : DatabaseValueConvertible, FetchableValue {
+    public typealias FetchedType = Int64
     
     /// Returns a value that can be stored in the database.
     public var databaseValue: DatabaseValue {
@@ -158,7 +162,8 @@ extension Int64: DatabaseValueConvertible {
 }
 
 /// Double is convertible to and from DatabaseValue.
-extension Double: DatabaseValueConvertible {
+extension Double : DatabaseValueConvertible, FetchableValue {
+    public typealias FetchedType = Double
     
     /// Returns a value that can be stored in the database.
     public var databaseValue: DatabaseValue {
@@ -179,7 +184,8 @@ extension Double: DatabaseValueConvertible {
 }
 
 /// String is convertible to and from DatabaseValue.
-extension String: DatabaseValueConvertible {
+extension String : DatabaseValueConvertible, FetchableValue {
+    public typealias FetchedType = String
     
     /// Returns a value that can be stored in the database.
     public var databaseValue: DatabaseValue {
@@ -199,7 +205,8 @@ extension String: DatabaseValueConvertible {
 
 
 /// A Database Blob
-public struct Blob : DatabaseValueConvertible {
+public struct Blob : DatabaseValueConvertible, FetchableValue {
+    public typealias FetchedType = Blob
     
     /// The data. Its length is guaranteed to be greater than zero.
     public let data: NSData
@@ -251,7 +258,7 @@ DatabaseValueConvertible adoption.
     db.execute("INSERT INTO colors (color) VALUES (?)", [Color.Red])
     let color: Color? = db.fetchOne(Color.self, "SELECT ...")
 */
-public protocol DatabaseIntRepresentable : DatabaseValueConvertible {
+public protocol DatabaseIntRepresentable : DatabaseValueConvertible, FetchableValue {
     var rawValue: Int { get }
     init?(rawValue: Int)
 }
@@ -294,7 +301,7 @@ DatabaseValueConvertible adoption.
     db.execute("INSERT StringO colors (color) VALUES (?)", [Color.Red])
     let color: Color? = db.fetchOne(Color.self, "SELECT ...")
 */
-public protocol DatabaseStringRepresentable : DatabaseValueConvertible {
+public protocol DatabaseStringRepresentable : DatabaseValueConvertible, FetchableValue {
     var rawValue: String { get }
     init?(rawValue: String)
 }
